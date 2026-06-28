@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function App() {
     const [messages, setMessages] = useState<any[]>([])
     const [input, setInput] = useState('')
@@ -15,7 +17,7 @@ export default function App() {
         setLoading(true)
 
         try {
-            const res = await fetch('http://localhost:8000/query', {
+            const res = await fetch(`${API_URL}/query`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question })
