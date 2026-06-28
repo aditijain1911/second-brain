@@ -14,6 +14,10 @@ print(f"DEBUG: GROQ_API_KEY found = {GROQ_KEY is not None}")
 if GROQ_KEY:
     print(f"DEBUG: Key starts with = {GROQ_KEY[:8]}")
 
+# groq_client = Groq(api_key=GROQ_KEY)
+
+if not GROQ_KEY:
+    raise ValueError("GROQ_API_KEY is not set in environment variables")
 groq_client = Groq(api_key=GROQ_KEY)
 
 
