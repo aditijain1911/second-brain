@@ -28,13 +28,12 @@ async def process(payload: IngestPayload):
         payload.timestamp.isoformat()
     )
 
+    if not chunks:
+        return
+
     # Generate embeddings
     texts = [chunk["text"] for chunk in chunks]
     embeddings = embed_text(texts)
 
-    # Attach embeddings to each chunk
-    for chunk, embedding in zip(chunks, embeddings):
-        chunk["embedding"] = embedding
-
     # Store in Qdrant
-    await store_chunks(chunks)
+    store_chunks(chunks, embeddings)
