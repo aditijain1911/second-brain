@@ -7,22 +7,14 @@ from pydantic import BaseModel
 import traceback
 import os
 
-# Load env file manually — most reliable way
-from pathlib import Path
-env_path = Path(__file__).parent.parent / ".env"
-if env_path.exists():
-    with open(env_path) as f:
-        for line in f:
-            line = line.strip()
-            if "=" in line and not line.startswith("#"):
-                key, value = line.split("=", 1)
-                os.environ[key.strip()] = value.strip()
-
-# Import groq at top level
-
-
 router = APIRouter()
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+GROQ_KEY = os.environ.get("GROQ_API_KEY")
+print(f"DEBUG: GROQ_API_KEY found = {GROQ_KEY is not None}")
+if GROQ_KEY:
+    print(f"DEBUG: Key starts with = {GROQ_KEY[:8]}")
+
+groq_client = Groq(api_key=GROQ_KEY)
 
 
 class QueryRequest(BaseModel):
@@ -32,22 +24,17 @@ class QueryRequest(BaseModel):
 @router.post("/query")
 async def query_memory(request: QueryRequest):
     try:
-        # 1. Embed the question
         question_embedding = embed_text([request.question])[0]
-
-        # 2. Find relevant chunks
         results = search_chunks(question_embedding, limit=5)
 
         if not results:
             return {"answer": "I don't have any memories about that yet.", "sources": []}
 
-        # 3. Build context
         context = "\n\n".join([
             f"From {r['url']}:\n{r['text']}"
             for r in results
         ])
 
-        # 4. Ask Groq
         response = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
