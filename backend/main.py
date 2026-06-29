@@ -28,12 +28,31 @@ def home():
 
 @app.get("/memories")
 def get_memories():
-    from db.metadata import engine, Document
-    from sqlmodel import Session, select
-    with Session(engine) as session:
-        docs = session.exec(select(Document)).all()
-        return [{"url": d.url, "title": d.title, "timestamp": str(d.timestamp)} for d in docs]
-
+    from services.vector_store import client, COLLECTION
+    
+    try:
+        results = client.scroll(
+            collection_name=COLLECTION,
+            limit=100,
+            with_payload=True
+        )
+        points = results[0]
+        
+        # Deduplicate by URL
+        seen_urls = set()
+        memories = []
+        for point in points:
+            url = point.payload.get("url")
+            if url not in seen_urls:
+                seen_urls.add(url)
+                memories.append({
+                    "url": url,
+                    "timestamp": point.payload.get("timestamp")
+                })
+        
+        return memories
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/reindex")
 def reindex():

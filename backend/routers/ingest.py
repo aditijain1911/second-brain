@@ -18,10 +18,12 @@ async def ingest(payload: IngestPayload, background_tasks: BackgroundTasks):
 
 
 async def process(payload: IngestPayload):
-    # Save raw document metadata
-    save_document(payload)
+    # Try saving to SQLite, but don't crash if it fails
+    try:
+        save_document(payload)
+    except Exception as e:
+        print(f"SQLite save failed (non-critical): {e}")
 
-    # Split text into chunks
     chunks = chunk_text(
         payload.text,
         payload.url,
@@ -31,9 +33,7 @@ async def process(payload: IngestPayload):
     if not chunks:
         return
 
-    # Generate embeddings
     texts = [chunk["text"] for chunk in chunks]
     embeddings = embed_text(texts)
 
-    # Store in Qdrant
     store_chunks(chunks, embeddings)
