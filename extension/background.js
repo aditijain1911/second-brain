@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://second-brain-production-0011.up.railway.app';
 
 chrome.runtime.onMessage.addListener(async (msg) => {
   if (msg.type !== 'CAPTURE') return;
